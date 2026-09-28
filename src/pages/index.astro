@@ -1,0 +1,571 @@
+---
+import { cumple } from "../data/config";
+
+const N = 38;
+const seeds = Array.from({ length: N }, (_, i) => ({
+    a: (i / N) * 360 + (i % 2 ? 4 : -4),
+    len: 50 + (i % 3) * 6,
+}));
+const tuft = Array.from({ length: 9 }, (_, k) => (k / 9) * 360);
+---
+
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{cumple.titulo} {cumple.nombre}!</title>
+        <meta name="robots" content="noindex" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,800&family=Nunito:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <div class="sky"></div>
+        <div class="sun"></div>
+        <div class="sea"></div>
+
+        <main>
+            <h1>
+                {cumple.titulo},<br />
+                {cumple.nombre}!
+            </h1>
+
+            <div id="flor">
+                <svg
+                    id="dandelion"
+                    viewBox="0 0 240 340"
+                    width="240"
+                    height="340"
+                    aria-hidden="true"
+                    style="overflow:visible"
+                >
+                    <defs>
+                        <linearGradient
+                            id="stemfade"
+                            gradientUnits="userSpaceOnUse"
+                            x1="0"
+                            y1="128"
+                            x2="0"
+                            y2="336"
+                        >
+                            <stop offset="0" stop-color="#a8e6c4" />
+                            <stop
+                                offset="1"
+                                stop-color="#a8e6c4"
+                                stop-opacity="0"
+                            />
+                        </linearGradient>
+                    </defs>
+                    <path
+                        class="resto"
+                        d="M120 128 C118 200 128 260 120 336"
+                        stroke="url(#stemfade)"
+                        stroke-width="4"
+                        fill="none"
+                        stroke-linecap="round"
+                    />
+                    {seeds.map((s) => (
+                        <g class="seed">
+                            <g transform={`translate(120 120) rotate(${s.a})`}>
+                                <line
+                                    x1="10"
+                                    y1="0"
+                                    x2={s.len}
+                                    y2="0"
+                                    stroke="#fff1dc"
+                                    stroke-width="1"
+                                    opacity=".85"
+                                />
+                                <g transform={`translate(${s.len} 0)`}>
+                                    {tuft.map((t) => (
+                                        <line
+                                            x1="0"
+                                            y1="0"
+                                            x2="7"
+                                            y2="0"
+                                            transform={`rotate(${t})`}
+                                            stroke="#fff1dc"
+                                            stroke-width=".8"
+                                        />
+                                    ))}
+                                    <circle r="1.4" fill="#fff1dc" />
+                                </g>
+                            </g>
+                        </g>
+                    ))}
+                    <circle
+                        class="resto"
+                        cx="120"
+                        cy="120"
+                        r="7"
+                        fill="#c9b48f"
+                    />
+                </svg>
+            </div>
+
+            <button id="blow" type="button">
+                Soplar el diente de león
+            </button>
+
+            <section id="msg" hidden>
+                {cumple.mensajes.map((m) => (
+                    <p>{m}</p>
+                ))}
+                <p class="sign">Con cariño, {cumple.firma}</p>
+            </section>
+        </main>
+
+        <div id="jelly" aria-hidden="true"></div>
+
+        <script>
+            const btn = document.getElementById("blow")!;
+            const msg = document.getElementById("msg")!;
+            const svg = document.getElementById(
+                "dandelion",
+            ) as unknown as SVGSVGElement;
+            const jelly = document.getElementById("jelly")!;
+            const seeds = [...svg.querySelectorAll<SVGGElement>(".seed")];
+            const colors = [
+                "#ff8fc7",
+                "#a596ff",
+                "#6fe3ff",
+                "#ffb27a",
+                "#8affd0",
+            ];
+            const HORIZON = 0.62; // el horizonte está al 62% de la altura
+
+            function medusa(
+                color: string,
+                size: number,
+                left: number,
+                bottom: number,
+                i: number,
+            ) {
+                const d = document.createElement("div");
+                d.className = "jf";
+                d.style.cssText = `left:${left}%;bottom:${bottom}%;width:${size}px;color:${color}`;
+                d.innerHTML = `
+          <svg viewBox="0 0 60 100" class="jsvg" style="--d:${4 + (i % 4)}s">
+            <g class="tent" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".6">
+              <path d="M14 38 q-5 12 0 24 t0 24" />
+              <path d="M22 40 q-5 14 0 28 t0 28" />
+              <path d="M30 40 q-5 12 0 24 t0 20" />
+              <path d="M38 40 q5 14 0 28 t0 24" />
+              <path d="M46 38 q5 12 0 24 t0 22" />
+            </g>
+            <path class="bell" d="M6 36 C6 6 54 6 54 36 C48 41 40 37 30 40 C20 37 12 41 6 36Z" fill="currentColor" fill-opacity=".6" />
+            <ellipse cx="30" cy="20" rx="14" ry="6" fill="#fff" fill-opacity=".28" />
+          </svg>`;
+                return d;
+            }
+
+            function ripple(x: number, y: number) {
+                const r = document.createElement("div");
+                r.className = "ripple";
+                r.style.left = x + "px";
+                r.style.top = y + "px";
+                document.body.appendChild(r);
+                setTimeout(() => r.remove(), 2200);
+            }
+
+            btn.addEventListener("click", () => {
+                btn.setAttribute("hidden", "");
+                const reduce = matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                ).matches;
+                const W = innerWidth,
+                    H = innerHeight;
+
+                // Tallo y centro se desvanecen
+                svg.querySelectorAll<SVGElement>(".resto").forEach((el) =>
+                    el.animate([{ opacity: 1 }, { opacity: 0 }], {
+                        duration: reduce ? 1 : 1800,
+                        delay: reduce ? 0 : 900,
+                        fill: "forwards",
+                    }),
+                );
+
+                // Al desaparecer el diente de león, el mensaje ocupa su lugar
+                const flor = document.getElementById("flor")!;
+                const alto = flor.offsetHeight;
+                setTimeout(
+                    () => {
+                        flor.animate(
+                            [{ height: alto + "px" }, { height: "0px" }],
+                            {
+                                duration: reduce ? 1 : 700,
+                                easing: "ease-in-out",
+                                fill: "forwards",
+                            },
+                        );
+                        msg.removeAttribute("hidden");
+                        msg.animate([{ opacity: 0 }, { opacity: 1 }], {
+                            duration: reduce ? 1 : 700,
+                        });
+                    },
+                    reduce ? 0 : 2700,
+                );
+
+                // Medusas: salen del mar después de que las semillas caen
+                const total = 8;
+                for (let i = 0; i < total; i++) {
+                    const bottom = 4 + Math.random() * 19; // dentro del mar (0–38%)
+                    const size = 90 - (bottom / 32) * 45; // más abajo = más cerca = más grande
+                    const left = 4 + (i / total) * 86 + Math.random() * 6;
+                    const j = medusa(
+                        colors[i % colors.length],
+                        size,
+                        left,
+                        bottom,
+                        i,
+                    );
+                    jelly.appendChild(j);
+                    if (reduce) {
+                        j.style.opacity = ".9";
+                        continue;
+                    }
+                    j.animate(
+                        [
+                            { transform: "translateY(160px)", opacity: 0 },
+                            { transform: "translateY(0)", opacity: 0.92 },
+                        ],
+                        {
+                            duration: 2800,
+                            delay: 2600 + i * 420,
+                            easing: "cubic-bezier(.2,.7,.3,1)",
+                            fill: "forwards",
+                        },
+                    );
+                }
+
+                if (reduce) {
+                    seeds.forEach((s) => (s.style.opacity = "0"));
+                    return;
+                }
+
+                // Semillas: vuelan con el viento y caen al mar
+                const k = 240 / svg.getBoundingClientRect().width; // px de pantalla → unidades del svg
+                seeds.forEach((s, i) => {
+                    const r = s.getBoundingClientRect();
+                    const x0 = r.left + r.width / 2;
+                    const y0 = r.top + r.height / 2;
+                    let dx = 80 + Math.random() * W * 0.6;
+                    dx = Math.min(dx, W - 16 - x0);
+                    const landY = H * HORIZON + 12 + Math.random() * H * 0.22;
+                    const dy = landY - y0;
+                    const rise = 50 + Math.random() * 150;
+                    const rot = (Math.random() - 0.5) * 540;
+                    const t = (x: number, y: number, extra = "") =>
+                        `translate(${x * k}px, ${y * k}px) ${extra}`;
+                    const anim = s.animate(
+                        [
+                            { transform: t(0, 0), opacity: 1, offset: 0 },
+                            {
+                                transform: t(
+                                    dx * 0.35,
+                                    -rise,
+                                    `rotate(${rot * 0.4}deg)`,
+                                ),
+                                opacity: 1,
+                                offset: 0.4,
+                            },
+                            {
+                                transform: t(
+                                    dx * 0.85,
+                                    dy * 0.75,
+                                    `rotate(${rot * 0.8}deg)`,
+                                ),
+                                opacity: 0.9,
+                                offset: 0.85,
+                            },
+                            {
+                                transform: t(
+                                    dx,
+                                    dy,
+                                    `rotate(${rot}deg) scale(.5)`,
+                                ),
+                                opacity: 0,
+                                offset: 1,
+                            },
+                        ],
+                        {
+                            duration: 4200 + Math.random() * 2200,
+                            delay: i * 35 + Math.random() * 300,
+                            easing: "cubic-bezier(.3,.1,.4,1)",
+                            fill: "forwards",
+                        },
+                    );
+                    anim.onfinish = () => ripple(x0 + dx, landY);
+                });
+            });
+        </script>
+        <style is:global>
+            :root {
+                --papel: #fff1dc;
+                --coral: #ffb199;
+                --menta: #a8e6c4;
+                --horizonte: 38%; /* alto del mar */
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                background: #082c47;
+            }
+            html,
+            body {
+                margin: 0;
+                min-height: 100%;
+            }
+            body {
+                min-height: 100svh;
+                color: var(--papel);
+                font-family: "Nunito", system-ui, sans-serif;
+                font-size: 1.125rem;
+                line-height: 1.6;
+                display: grid;
+                place-items: center;
+                overflow-x: hidden;
+            }
+
+            /* Paisaje */
+            .sky {
+                position: fixed;
+                inset: 0 0 var(--horizonte) 0;
+                z-index: -3;
+                background: linear-gradient(
+                    #141a4f 0%,
+                    #3c3591 45%,
+                    #d0709a 82%,
+                    #ffb98a 100%
+                );
+            }
+            .sun {
+                position: fixed;
+                z-index: -2;
+                left: 50%;
+                width: 150px;
+                height: 150px;
+                bottom: calc(var(--horizonte) - 55px);
+                transform: translateX(-50%);
+                border-radius: 50%;
+                background: radial-gradient(
+                    circle,
+                    #fff3c9 0%,
+                    #ffc27a 60%,
+                    #ff9a6b 100%
+                );
+                box-shadow: 0 0 90px 30px rgba(255, 170, 110, 0.5);
+            }
+            .sea {
+                position: fixed;
+                z-index: -1;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: var(--horizonte);
+                background: linear-gradient(
+                    #4a6fa0 6%,
+                    #14507a 30%,
+                    #082c47 100%
+                );
+            }
+            .sea::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 50%;
+                width: 120px;
+                height: 70%;
+                transform: translateX(-50%);
+
+                -webkit-mask-image: linear-gradient(
+                    to bottom,
+                    #000,
+                    transparent
+                );
+                mask-image: linear-gradient(to bottom, #000, transparent);
+            }
+
+            /* Contenido */
+            main {
+                position: relative;
+                z-index: 1;
+                width: min(34rem, 100% - 2rem);
+                padding: 2rem 0;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            h1 {
+                font-family: "Fraunces", Georgia, serif;
+                font-style: italic;
+                font-weight: 800;
+                font-size: clamp(2.5rem, 10vw, 4.4rem);
+                line-height: 1;
+                margin: 0 0 0.5rem;
+                color: var(--papel);
+                text-shadow: 0 2px 18px rgba(20, 26, 79, 0.6);
+            }
+            .age {
+                margin: 0 0 0.5rem;
+                color: var(--coral);
+                font-weight: 700;
+            }
+
+            #dandelion {
+                display: block;
+                width: min(220px, 55vw);
+                height: auto;
+                margin-bottom: 0.5rem;
+                transform-origin: 50% 100%;
+                animation: brisa 6s ease-in-out infinite alternate;
+            }
+            .seed {
+                transform-box: fill-box;
+                transform-origin: center;
+            }
+            @keyframes brisa {
+                from {
+                    transform: rotate(-1.5deg);
+                }
+                to {
+                    transform: rotate(1.5deg);
+                }
+            }
+
+            button {
+                font: inherit;
+                font-weight: 700;
+                background: var(--papel);
+                color: #141a4f;
+                border: 0;
+                border-radius: 999px;
+                padding: 0.8rem 1.8rem;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #fff;
+            }
+            button:focus-visible {
+                outline: 3px solid var(--coral);
+                outline-offset: 3px;
+            }
+
+            #msg {
+                text-align: left;
+                max-width: 30rem;
+                margin-top: 0.5rem;
+                background: rgba(6, 25, 45, 0.55);
+                -webkit-backdrop-filter: blur(6px);
+                backdrop-filter: blur(6px);
+                border-radius: 14px;
+                padding: 1.2rem 1.4rem;
+            }
+            #msg[hidden] {
+                display: none;
+            }
+            #msg p {
+                margin: 0 0 1rem;
+            }
+            #msg .sign {
+                font-family: "Fraunces", Georgia, serif;
+                font-style: italic;
+                color: var(--coral);
+                font-size: 1.4rem;
+                margin: 1.2rem 0 0;
+            }
+
+            /* Medusas */
+            #jelly {
+                position: fixed;
+                inset: 0;
+                z-index: 2;
+                pointer-events: none;
+                overflow: hidden;
+            }
+            .jf {
+                position: absolute;
+                opacity: 0;
+            }
+            .jsvg {
+                display: block;
+                width: 100%;
+                height: auto;
+                overflow: visible;
+                filter: drop-shadow(0 0 10px currentColor);
+                animation: flotar var(--d, 5s) ease-in-out infinite alternate;
+            }
+            .bell,
+            .tent {
+                transform-box: fill-box;
+                transform-origin: 50% 0;
+            }
+            .bell {
+                animation: pulso 2.4s ease-in-out infinite;
+            }
+            .tent {
+                animation: vaiven 2.4s ease-in-out infinite;
+            }
+            @keyframes flotar {
+                from {
+                    transform: translateY(0);
+                }
+                to {
+                    transform: translateY(-22px);
+                }
+            }
+            @keyframes pulso {
+                0%,
+                100% {
+                    transform: scale(1, 1);
+                }
+                50% {
+                    transform: scale(1.06, 0.9);
+                }
+            }
+            @keyframes vaiven {
+                0%,
+                100% {
+                    transform: skewX(-4deg);
+                }
+                50% {
+                    transform: skewX(4deg);
+                }
+            }
+
+            /* Ondas donde caen las semillas */
+            .ripple {
+                position: fixed;
+                z-index: 0;
+                width: 8px;
+                height: 3px;
+                margin: -1.5px 0 0 -4px;
+                border: 1px solid rgba(255, 241, 220, 0.8);
+                border-radius: 50%;
+                pointer-events: none;
+                animation: onda 2s ease-out forwards;
+            }
+            @keyframes onda {
+                to {
+                    transform: scale(9);
+                    opacity: 0;
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                #dandelion,
+                .jsvg,
+                .bell,
+                .tent {
+                    animation: none;
+                }
+            }
+        </style>
+    </body>
+</html>
